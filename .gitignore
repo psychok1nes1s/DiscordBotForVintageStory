@@ -1,0 +1,23 @@
+# Для C#
+/bin/
+/obj/
+*.suo
+*.user
+*.csproj.user
+*.pidb
+*.pdb
+*.dll
+*.exe
+
+# Для Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env/
+
+# Общее
+.DS_Store
+.vscode/
+.idea/
