@@ -1,6 +1,6 @@
 # Для C#
-/bin/
-/obj/
+bin/
+obj/
 *.suo
 *.user
 *.csproj.user
@@ -12,27 +12,22 @@
 [Dd]ebug/
 [Rr]elease/
 *.cache
-*.log
 *.vspscc
 *.vssscc
 .builds
 *.sln.docstates
+*.userosscache
 
 # Для Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 venv/
-.env/
 .env
 .python-version
 .pytest_cache/
-*.log
 .coverage
 htmlcov/
 .tox/
-.pytest_cache/
 .mypy_cache/
 
 # Конфиги
@@ -41,13 +36,17 @@ appsettings*.json
 config.json
 !config.example.json
 secrets.json
+config.py
+!config.example.py
 
-# IDE
+# IDE и редакторы
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.template.config/
+Properties/
 
 # Общее
 .DS_Store
@@ -55,21 +54,8 @@ Thumbs.db
 *.bak
 *.tmp
 *.temp
+*.log
 logs/
 dist/
 build/
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Конфиги
-config.py
-!config.example.py
-
-# Visual Studio специфичные файлы
-*.user
-*.userosscache
-*.sln.docstates
-.template.config/
-Properties/
+.env.*
