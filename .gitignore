@@ -8,6 +8,15 @@
 *.pdb
 *.dll
 *.exe
+.vs/
+[Dd]ebug/
+[Rr]elease/
+*.cache
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.sln.docstates
 
 # Для Python
 __pycache__/
@@ -16,8 +25,51 @@ __pycache__/
 *.pyd
 venv/
 .env/
+.env
+.python-version
+.pytest_cache/
+*.log
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+.mypy_cache/
+
+# Конфиги
+appsettings*.json
+!appsettings.example.json
+config.json
+!config.example.json
+secrets.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
 # Общее
 .DS_Store
-.vscode/
-.idea/
+Thumbs.db
+*.bak
+*.tmp
+*.temp
+logs/
+dist/
+build/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Конфиги
+config.py
+!config.example.py
+
+# Visual Studio специфичные файлы
+*.user
+*.userosscache
+*.sln.docstates
+.template.config/
+Properties/
