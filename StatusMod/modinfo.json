@@ -2,10 +2,10 @@
     "type": "code",
     "side": "server",
     "modid": "statusmod",
-    "name": "statusmod",
-    "author": "psychokinesis",
-    "description": "StatusMod for Vintage Story discord bot",
-    "version": "1.0.0",
+    "name": "Status Mod",
+    "author": "YourName",
+    "description": "Server status API mod for Vintage Story Discord integration",
+    "version": "1.1.0",
     "dependency": {
         "game": ""
     }
