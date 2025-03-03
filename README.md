@@ -147,7 +147,6 @@ python bot.py
 StatusDiscordBot/
 ├── DiscordBot/                # Discord бот
 │   ├── bot.py                # Основной код бота
-│   ├── config.py             # Рабочая конфигурация
 │   └── config.example.py     # Пример конфигурации
 └── StatusMod/                # Мод для Vintage Story
     ├── statusmodModSystem.cs # Основной код мода
