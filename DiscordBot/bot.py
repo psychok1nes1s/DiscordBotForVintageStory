@@ -108,34 +108,78 @@ async def on_ready():
     notification_channel_id = getattr(Config, 'NOTIFICATION_CHANNEL_ID', None)
     if notification_channel_id:
         try:
-            channel = await bot.fetch_channel(notification_channel_id)
-            print(f'Канал для уведомлений: #{channel.name}')
+            channel = await bot.fetch_channel(int(notification_channel_id))
+            print(f'Канал для уведомлений найден: #{channel.name} (ID: {channel.id})')
+        except discord.errors.NotFound:
+            print(f'ОШИБКА: Канал с ID {notification_channel_id} не найден')
+        except discord.errors.Forbidden:
+            print(f'ОШИБКА: Нет доступа к каналу с ID {notification_channel_id}')
         except Exception as e:
-            print(f'Ошибка при получении канала для уведомлений: {e}')
+            print(f'ОШИБКА при получении канала для уведомлений: {e}')
+    else:
+        print('ВНИМАНИЕ: ID канала для уведомлений не указан в config.py (NOTIFICATION_CHANNEL_ID)')
     
     # Запуск HTTP сервера для приема уведомлений от игрового сервера
     start_notification_server()
 
 # Класс для обработки HTTP запросов с уведомлениями
 class NotificationHandler(BaseHTTPRequestHandler):
+    def log_message(self, format, *args):
+        # Подавляем стандартное логирование для снижения шума
+        pass
+        
     def do_POST(self):
         if self.path == '/status/notification':
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
+            
             try:
                 notification = json.loads(post_data.decode('utf-8'))
-                print(f"Получено уведомление: {notification}")
+                print(f"Получено уведомление типа: {notification.get('type')}")
                 
-                # Отправляем уведомление в Discord
-                asyncio.run_coroutine_threadsafe(send_discord_notification(notification), bot.loop)
+                # Проверяем наличие ID канала уведомлений
+                if not notification_channel_id:
+                    error_msg = "Канал для уведомлений не настроен в config.py"
+                    print(f"ОШИБКА: {error_msg}")
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "error", "message": error_msg}).encode('utf-8'))
+                    return
                 
-                # Отправляем успешный ответ
-                self.send_response(200)
+                # Создаем задачу отправки уведомления в Discord
+                future = asyncio.run_coroutine_threadsafe(send_discord_notification(notification), bot.loop)
+                
+                try:
+                    # Ждем выполнения корутины с таймаутом
+                    result = future.result(timeout=10)
+                    
+                    # Отправляем успешный ответ
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    response_data = {"status": "ok"}
+                    self.wfile.write(json.dumps(response_data).encode('utf-8'))
+                except asyncio.TimeoutError:
+                    print("ОШИБКА: Таймаут при отправке уведомления в Discord")
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "error", "message": "Таймаут при отправке уведомления"}).encode('utf-8'))
+                except Exception as e:
+                    print(f"ОШИБКА при отправке уведомления: {e}")
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+            except json.JSONDecodeError:
+                print("ОШИБКА: Получены некорректные данные JSON")
+                self.send_response(400)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"status": "error", "message": "Неверный формат JSON"}).encode('utf-8'))
             except Exception as e:
-                print(f"Ошибка при обработке уведомления: {e}")
+                print(f"ОШИБКА при обработке уведомления: {e}")
                 self.send_response(500)
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
@@ -146,16 +190,47 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
 # Функция для отправки уведомлений в Discord
 async def send_discord_notification(notification):
+    # Проверяем наличие ID канала
     if not notification_channel_id:
-        print("Канал для уведомлений не настроен")
-        return
+        print("ОШИБКА: Канал для уведомлений не настроен")
+        return {"success": False, "error": "Канал для уведомлений не настроен"}
     
     try:
-        channel = await bot.fetch_channel(notification_channel_id)
-        
-        if notification.get('type') == 'notification':
-            color = 0xFF0000 if notification.get('stormActive', False) else 0xFFAA00 if notification.get('stormWarning', False) else 0x00FF00
+        # Проверяем, что бот подключен к Discord
+        if not bot.is_ready():
+            print(f"ОШИБКА: Бот не готов/не подключен к Discord")
+            return {"success": False, "error": "Бот не готов"}
             
+        # Получаем объект канала по ID
+        try:
+            channel_id = int(notification_channel_id)
+            channel = await bot.fetch_channel(channel_id)
+        except ValueError:
+            print(f"ОШИБКА: Некорректный формат ID канала: {notification_channel_id}")
+            return {"success": False, "error": "Некорректный ID канала"}
+        except discord.errors.NotFound:
+            print(f"ОШИБКА: Канал с ID {notification_channel_id} не найден")
+            return {"success": False, "error": "Канал не найден"}
+        except discord.errors.Forbidden:
+            print(f"ОШИБКА: Нет доступа к каналу с ID {notification_channel_id}")
+            return {"success": False, "error": "Нет доступа к каналу"}
+        except Exception as e:
+            print(f"ОШИБКА при получении канала: {e}")
+            return {"success": False, "error": f"Ошибка получения канала: {str(e)}"}
+        
+        # Обработка разных типов уведомлений
+        if notification.get('type') == 'notification' or notification.get('type') == 'storm_notification':
+            # Определяем цвет в зависимости от статуса шторма
+            if notification.get('type') == 'storm_notification':
+                is_active = notification.get('is_active', False)
+                is_warning = notification.get('is_warning', False)
+                color = 0xFF0000 if is_active else 0xFFAA00 if is_warning else 0x00FF00
+            else:
+                storm_active = notification.get('stormActive', False)
+                storm_warning = notification.get('stormWarning', False)
+                color = 0xFF0000 if storm_active else 0xFFAA00 if storm_warning else 0x00FF00
+            
+            # Создаем embed для сообщения
             embed = discord.Embed(
                 title="Уведомление с сервера", 
                 description=notification.get('message', 'Нет сообщения'),
@@ -164,10 +239,58 @@ async def send_discord_notification(notification):
             
             if 'time' in notification:
                 embed.add_field(name="Игровое время", value=notification['time'], inline=True)
+                
+            # Попытка отправить сообщение
+            try:
+                message = await channel.send(embed=embed)
+                print(f"Уведомление о шторме отправлено")
+                return {"success": True}
+            except discord.errors.Forbidden:
+                print(f"ОШИБКА: Нет прав для отправки сообщения в канал")
+                return {"success": False, "error": "Нет прав для отправки сообщения"}
+            except Exception as e:
+                print(f"ОШИБКА при отправке сообщения: {e}")
+                return {"success": False, "error": f"Ошибка отправки: {str(e)}"}
             
-            await channel.send(embed=embed)
+        elif notification.get('type') == 'season_notification':
+            # Определяем цвет в зависимости от сезона
+            season_colors = {
+                'spring': 0x77DD77,  # Светло-зеленый
+                'summer': 0xFFFF66,  # Желтый
+                'autumn': 0xFF6600,  # Оранжевый
+                'fall': 0xFF6600,    # Альтернативное название осени
+                'winter': 0xADD8E6   # Голубой
+            }
+            
+            season = notification.get('season', '').lower()
+            color = season_colors.get(season, 0x7289DA)  # Стандартный синий Discord, если сезон не определен
+            
+            embed = discord.Embed(
+                title=f"Смена сезона", 
+                description=notification.get('message', 'Наступил новый сезон!'),
+                color=color
+            )
+            
+            if 'time' in notification:
+                embed.add_field(name="Игровое время", value=notification['time'], inline=True)
+            
+            # Попытка отправить сообщение
+            try:
+                message = await channel.send(embed=embed)
+                print(f"Уведомление о смене сезона отправлено")
+                return {"success": True}
+            except discord.errors.Forbidden:
+                print(f"ОШИБКА: Нет прав для отправки сообщения в канал")
+                return {"success": False, "error": "Нет прав для отправки сообщения"}
+            except Exception as e:
+                print(f"ОШИБКА при отправке сообщения о сезоне: {e}")
+                return {"success": False, "error": f"Ошибка отправки: {str(e)}"}
+        else:
+            print(f"ПРЕДУПРЕЖДЕНИЕ: Получен неизвестный тип уведомления: {notification.get('type')}")
+            return {"success": False, "error": f"Неизвестный тип уведомления: {notification.get('type')}"}
     except Exception as e:
-        print(f"Ошибка при отправке уведомления в Discord: {e}")
+        print(f"КРИТИЧЕСКАЯ ОШИБКА: {e}")
+        return {"success": False, "error": f"Критическая ошибка: {str(e)}"}
 
 # Функция для запуска HTTP сервера в отдельном потоке
 def start_notification_server():
