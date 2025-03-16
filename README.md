@@ -115,9 +115,7 @@ StatusDiscordBot/
 │   └── ... (другие файлы мода)
 └── DiscordBot/          # Discord бот на Python
     ├── bot.py           # Основной файл бота
-    ├── config.py        # Настройки бота
     ├── config.example.py # Пример настроек
-    ├── .env             # Переменные окружения
     ├── .env.example     # Пример переменных окружения
     ├── cogs/            # Модули бота
     │   ├── guides.py    # Система гайдов
