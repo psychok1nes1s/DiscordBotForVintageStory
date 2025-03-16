@@ -1,0 +1,18 @@
+{
+  "server": {
+    "online": true,
+    "player_count": 1,
+    "max_players": 15,
+    "last_checked": "2025-03-16 21:32:12",
+    "players": [
+      "McGuboShlep"
+    ],
+    "temporal_storm": "Неактивен",
+    "pretty_date": "1 января 13 года, 03:40"
+  },
+  "manual_maintenance": {
+    "active": false,
+    "reason": ""
+  },
+  "player_count_changed": false
+}

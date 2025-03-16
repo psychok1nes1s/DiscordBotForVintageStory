@@ -1,0 +1,62 @@
+# C# / .NET 
+bin/ 
+obj/ 
+*.suo 
+*.user 
+*.csproj.user 
+*.pidb 
+*.cache 
+*.vspscc 
+*.vssscc 
+.builds 
+*.sln.docstates 
+*.userosscache 
+.vs/ 
+ 
+# Python 
+__pycache__/ 
+*.py[cod] 
+venv/ 
+env/ 
+full_release.bat 
+clean_history.bat 
+.env 
+.python-version 
+.pytest_cache/ 
+.coverage 
+htmlcov/ 
+.tox/ 
+.mypy_cache/ 
+ 
+# Конфигурационные файлы 
+config.py 
+**/config.py 
+secrets.json 
+ 
+# Логи и временные файлы 
+*.log 
+*.tmp 
+*.temp 
+*.bak 
+ 
+# IDE и редакторы 
+.vscode/ 
+.idea/ 
+*.swp 
+*.swo 
+*~ 
+.template.config/ 
+ 
+# Системные файлы 
+.DS_Store 
+Thumbs.db 
+ 
+# Данные и кэш 
+discord_bot.log 
+ 
+# НЕ игнорировать эти файлы 
+!.env.example 
+!config.example.py 
+!requirements.txt 
+!README.md 
+!LICENSE 

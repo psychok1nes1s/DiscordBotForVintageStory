@@ -1,0 +1,15 @@
+# Установка автоматического определения текстовых файлов
+* text=auto
+
+# Защита конфигурационных файлов с секретами
+DiscordBot/config.py filter=git-crypt diff=git-crypt
+**/.env filter=git-crypt diff=git-crypt
+**/secrets.json filter=git-crypt diff=git-crypt
+
+# Не шифровать примеры файлов
+!**/config.example.py filter=git-crypt diff=git-crypt
+!**/.env.example filter=git-crypt diff=git-crypt
+
+# Исправление окончаний строк для shell скриптов
+*.sh text eol=lf
+*.bat text eol=crlf 
